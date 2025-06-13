@@ -1,33 +1,42 @@
-# models/qwen25_infer.py
-
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from huggingface_hub import InferenceClient
-from common import InferenceLLMComponent
+from common.InferenceLLMComponent import InferenceLLMComponent
 
 class Qwen25Infer(InferenceLLMComponent):
     """
     Inference component for Qwen2.5-3B, supporting both local and API-based modes.
     """
+
     def __init__(
         self,
         model_name: str = None,
         api_endpoint: str = None,
         api_token: str = None,
-        device: str = 'cuda'
+        device='mps'
     ):
         """
         Args:
             model_name: Hugging Face model ID for local inference.
             api_endpoint: remote API model endpoint (if using hosted inference).
             api_token: authentication token for the API.
-            device: 'cuda' or 'cpu'.
+            device: str or torch.device ('cuda', 'mps', or 'cpu').
         """
-        # Determine device
-        if device == 'cuda' and torch.cuda.is_available():
-            self.device = 'cuda'
+        # Resolve device
+        if isinstance(device, torch.device):
+            self.device = device
+        elif isinstance(device, str):
+            dev = device.lower()
+            if dev == 'mps' and torch.backends.mps.is_available():
+                self.device = torch.device('mps')
+            elif dev == 'cuda' and torch.cuda.is_available():
+                self.device = torch.device('cuda')
+            elif dev == 'cpu':
+                self.device = torch.device('cpu')
+            else:
+                raise ValueError(f"Unsupported or unavailable device: {device}")
         else:
-            self.device = 'cpu'
+            raise TypeError("`device` must be a str or torch.device")
 
         self.api_endpoint = api_endpoint
         self.api_token = api_token
@@ -35,7 +44,7 @@ class Qwen25Infer(InferenceLLMComponent):
         self.tokenizer = None
         self.model = None
 
-        # Initialize API client if credentials provided
+        # Initialize API client if provided
         if api_endpoint and api_token:
             self.client = InferenceClient(model=api_endpoint, token=api_token)
         # Otherwise load local model
@@ -47,7 +56,7 @@ class Qwen25Infer(InferenceLLMComponent):
             ).to(self.device)
             print("Model loaded!")
         else:
-            raise ValueError("Either model_name or API credentials must be provided.")
+            raise ValueError("Either `model_name` or API credentials must be provided.")
 
     def infer(
         self,
@@ -60,13 +69,13 @@ class Qwen25Infer(InferenceLLMComponent):
         Generate text for the given prompt.
 
         Args:
-            prompt: The input text prompt.
+            prompt: Non-empty input text.
             max_length: Maximum number of tokens to generate.
             temperature: Sampling temperature.
             **kwargs: Additional generation parameters.
 
         Returns:
-            str: The generated text.
+            Generated text string.
         """
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt must be a non-empty string.")

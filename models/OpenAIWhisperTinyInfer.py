@@ -7,7 +7,7 @@ class OpenAIWhisperTinyInfer(InferenceAudioComponent):
     """
     Inference component for the OpenAI Whisper Tiny model.
     """
-    def __init__(self, model_name="openai/whisper-tiny", samplerate=16000):
+    def __init__(self, model_name="openai/whisper-tiny", samplerate=16000, **kwargs):
         self.samplerate = samplerate
         self.processor = WhisperProcessor.from_pretrained(model_name)
         self.model = WhisperForConditionalGeneration.from_pretrained(model_name)
