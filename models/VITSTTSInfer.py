@@ -54,5 +54,12 @@ class VITSTTSInfer(InferenceTTSComponent):
         Returns:
             np.ndarray: Synthesized audio waveform (float32).
         """
-        wav = self.tts.tts(text, speaker=self.speaker)[0]
+        # Coqui TTS may return (waveform, sample_rate) or just waveform array
+        out = self.tts.tts(text, speaker=self.speaker)
+        if isinstance(out, tuple):
+            wav, _sr = out  # unpack waveform, ignore sample rate
+        else:
+            wav = out       # already the full waveform
+
+        # Convert to float32 numpy array
         return np.array(wav, dtype=np.float32)
