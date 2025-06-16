@@ -8,3 +8,4 @@ from common.InferenceLLMComponent import InferenceLLMComponent
 from common.InferenceTTSComponent import InferenceTTSComponent
 from common.InferenceTextEmbeddingComponent import InferenceTextEmbeddingComponent
 from common.MemoryComponent import MemoryComponent
+from common.PromptBuilderComponent import PromptBuilderComponent

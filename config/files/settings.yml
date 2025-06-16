@@ -1,0 +1,5 @@
+# config/files/settings.yml
+
+prompt_builder:
+  # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
+  templates_dir: prompt/prompt_files
