@@ -6,3 +6,5 @@ from common.InferenceVisionComponent import InferenceVisionComponent
 from common.InferenceAudioComponent import InferenceAudioComponent
 from common.InferenceLLMComponent import InferenceLLMComponent
 from common.InferenceTTSComponent import InferenceTTSComponent
+from common.InferenceTextEmbeddingComponent import InferenceTextEmbeddingComponent
+from common.MemoryComponent import MemoryComponent
