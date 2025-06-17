@@ -62,7 +62,7 @@ class Qwen25Infer(InferenceLLMComponent):
         self,
         prompt: str,
         max_length: int = 256,
-        temperature: float = 0.7,
+        temperature: float = 0.1,
         **kwargs
     ) -> str:
         """
@@ -87,10 +87,14 @@ class Qwen25Infer(InferenceLLMComponent):
 
         # Local inference
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        # Record how many tokens the prompt took:
+        prompt_len = inputs["input_ids"].shape[-1]
+
         generated = self.model.generate(
             **inputs,
             max_length=max_length,
             temperature=temperature,
             **kwargs
         )
+        generated = generated[:, prompt_len:]
         return self.tokenizer.decode(generated[0], skip_special_tokens=True)

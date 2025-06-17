@@ -2,10 +2,10 @@
 
 import json
 from pydantic import ValidationError
-from io.lm.ChatResponse import ChatResponse
+from schemas.lm.ChatResponse import ChatResponse
 from common import CallableComponent
 
-class ChatesponseParser(CallableComponent):
+class ChatResponseParser(CallableComponent):
     """
     Parses a raw JSON string into a ChatResponse Pydantic model.
     Raises a ValidationError if the JSON is missing required fields

@@ -1,14 +1,13 @@
 # prompt/PromptBuilderComponent.py
-
+import os.path
 import re
 import yaml
 import importlib
 from abc import abstractmethod
-from pathlib import Path
 from typing import Any, Tuple, Type
 from pydantic import BaseModel
-from common.callable_component import CallableComponent
-from config.loader.settings import settings
+from common import CallableComponent
+from config.loader import settings, project_root
 
 def camel_to_snake(name: str) -> str:
     """
@@ -37,22 +36,22 @@ class PromptBuilderComponent(CallableComponent):
     def __init__(self):
         # Load templates_dir from settings
         tpl_rel = settings["prompt_builder"]["templates_dir"]
-        project_root = Path(settings.get("project_root", "."))
-        self.templates_dir = project_root / tpl_rel
+        self.templates_dir = os.path.join(project_root, tpl_rel)
 
         # Determine YAML filename from class name or override
         cls_core = self.__class__.__name__.replace("PromptBuilder", "")
         key = getattr(self, "template_key", camel_to_snake(cls_core))
         filename = f"prompt_{key}.yml"
-        path = self.templates_dir / filename
-        if not path.is_file():
+        path = os.path.join(self.templates_dir, filename)
+        if not os.path.isfile(path):
             raise FileNotFoundError(f"Prompt template not found: {path}")
 
         # Load YAML and validate required sections
-        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-        for section in ("system_prompt", "user_prompt", "user_postfix", "pydantic_model"):
-            if section not in doc:
-                raise KeyError(f"'{section}' missing in {path.name}")
+        with open(path, 'r', encoding='utf-8') as f:
+            doc = yaml.safe_load(f)
+            for section in ("system_prompt", "user_prompt", "user_postfix", "pydantic_model"):
+                if section not in doc:
+                    raise KeyError(f"'{section}' missing in {filename}")
 
         self.system_template  = doc["system_prompt"]
         self.user_template    = doc["user_prompt"]
@@ -94,7 +93,7 @@ class PromptBuilderComponent(CallableComponent):
     def get_response_parser(self) -> CallableComponent:
         """
         Dynamically import and return the corresponding parser class for this schema.
-        E.g. 'io.lm.ChatResponse' → 'io.lm.ChatResponseParser'
+        E.g. 'schemas.lm.ChatResponse' → 'schemas.lm.ChatResponseParser'
         """
         module_name, cls_name = self.schema_path.rsplit(".", 1)
         parser_mod = importlib.import_module(module_name)
@@ -116,8 +115,12 @@ class PromptBuilderComponent(CallableComponent):
         Produce (system_prompt, full_user_prompt).
         full_user_prompt = build_user(**context) + newline + build_postfix(**context)
         """
-        sys_txt  = self.build_system(**context)
+        sys_txt  = self.build_system(**context) + "  " + self.build_postfix(**context)
         user_txt = self.build_user(**context)
-        user_txt = f"{user_txt}\n{self.build_postfix(**context)}"
         return {"system": sys_txt,
                 "user": user_txt}
+
+
+
+## /Users/saketm10/Projects/smruti/prompts/prompt_files/prompt_main.yml
+## /Users/saketm10/Projects/smruti/prompts/prompt_files/prompt_main.yml

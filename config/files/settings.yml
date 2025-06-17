@@ -2,4 +2,4 @@
 
 prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
-  templates_dir: prompt/prompt_files
+  templates_dir: prompts/prompt_files

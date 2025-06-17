@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Literal, Dict, List, Optional
 
 
@@ -41,7 +41,7 @@ class ChatResponse(BaseModel):
     """
     The structured JSON response schema from the LLM.
     """
-    schema_version: str = Field("1.0", const=True)
+    schema_version: Literal["1.0"] = "1.0"
     status: Literal["ok", "error"]
     messages: List[Message]
 

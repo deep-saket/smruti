@@ -2,8 +2,8 @@
 
 from typing import Optional
 from common.CallableComponent import CallableComponent
-from io.lm.ChatResponse import ChatResponse
-from io.lm.ResponseEnvelope import ResponseEnvelope, Diagnostics, ModelInfo, GenerationParams, SafetyFlags, LengthMetrics, FallbackInfo
+from schemas.lm.ChatResponse import ChatResponse
+from schemas.lm.ResponseEnvelope import ResponseEnvelope, Diagnostics, ModelInfo, GenerationParams, SafetyFlags, LengthMetrics, FallbackInfo
 class ResponseEnvelopeBuilder(CallableComponent):
     """
     Combines a ChatResponse and computed diagnostics & metadata

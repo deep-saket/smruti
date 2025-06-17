@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from io.lm.ChatResponse import ChatResponse
+from schemas.lm.ChatResponse import ChatResponse
 from pydantic import BaseModel
 from typing import Optional, List
 
