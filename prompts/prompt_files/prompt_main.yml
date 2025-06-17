@@ -49,6 +49,10 @@ user_prompt: |
   Memory to write:
   {memory_writes}
 
+assistant_prompt: |
+  You are the assistant. Based on the user’s latest message, the conversation history, 
+  and relevant memories, provide a concise, helpful response.
+
 user_postfix: |
   Always output valid JSON conforming to the ChatResponse schema.
   Do not include any extra text or explanations outside the JSON.

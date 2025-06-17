@@ -25,11 +25,18 @@ def main():
 
     print("🤖 Interactive voice assistant (say 'exit' to quit)")
 
+    i = 0
     while True:
         # 1) Capture & transcribe
         audio_in  = recorder.record(duration=5)
         user_text = stt.infer(audio_in).strip()
         print(f"\nYou said: {user_text}")
+
+        if i == 0:
+            user_text = "Hi"
+        if i == 1:
+            user_text = "What is the weather like today?"
+        i += 1
 
         # 2) Update memories
         chat_mem.add("user", user_text)

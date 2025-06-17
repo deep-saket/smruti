@@ -21,25 +21,20 @@ class PromptBuilderMain(PromptBuilderComponent):
 
     def build_user(self, **context: Any) -> str:
         """
-        Render the main user_prompt body.
-        Expects context keys:
-          - new_message: str
-          - context: str
-          - memory_snippets: str  (semantic memory reads)
-          - memory_writes: str    (new facts to write)
+        Render the user_prompt from the YAML template.
+        Expects context keys matching placeholders defined in user_prompt.
         """
-        new_msg        = context.get("new_message", "")
-        convo          = context.get("context", "")
-        memory_reads   = context.get("memory_snippets", "")
-        memory_writes  = context.get("memory_writes", "")
+        template = self._tpl["user_prompt"]
+        return template.format(**context)
 
-        parts = []
-        parts.append(f"User says: {new_msg}")
-        if convo:
-            parts.append(f"\nConversation history:\n{convo}")
-        if memory_reads:
-            parts.append(f"\nRelevant memories:\n{memory_reads}")
-        if memory_writes:
-            parts.append(f"\nMemory to write:\n{memory_writes}")
-
-        return "\n\n".join(parts)
+    def build_assistant(self, **context: Any) -> str:
+        """
+        Render the assistant_prompt body.
+        Expects context keys matching those used in your YAML's
+        assistant_prompt template (e.g. new_message, context, etc.).
+        """
+        # Format the assistant prompt section
+        assistant_body = self._tpl["assistant_prompt"].format(**context)
+        # Optionally append the postfix if desired by your prompt design
+        postfix = self.build_postfix(**context)
+        return f"{assistant_body}{postfix}"

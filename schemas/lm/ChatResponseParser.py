@@ -1,22 +1,24 @@
-# modules/processing/LLMResponseParser.py
-
 import json
 from pydantic import ValidationError
+from common.DirtyJsonParser import DirtyJsonParser
 from schemas.lm.ChatResponse import ChatResponse
-from common import CallableComponent
 
-class ChatResponseParser(CallableComponent):
-    """
-    Parses a raw JSON string into a ChatResponse Pydantic model.
-    Raises a ValidationError if the JSON is missing required fields
-    or has the wrong structure.
-    """
-    def __call__(self, raw_json: str) -> ChatResponse:
+class ChatResponseParser:
+    @staticmethod
+    def parse(raw: str) -> ChatResponse:
+        """
+        Parses raw LLM output into a ChatResponse:
+        1) Extracts the first JSON-like block via DirtyJsonParser.
+        2) Validates it directly against the ChatResponse schema.
+        """
+        # 1) Extract the JSON-tolerant object
         try:
-            # Ensure it’s valid JSON first
-            obj = json.loads(raw_json)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON: {e}")
+            data = DirtyJsonParser.parse(raw)
+        except Exception as e:
+            raise ValueError(f"ChatResponseParser: failed to extract JSON → {e}")
 
-        # Now validate against the ChatResponse schema
-        return ChatResponse.parse_obj(obj)
+        # 2) Validate against ChatResponse
+        try:
+            return ChatResponse.parse_obj(data)
+        except ValidationError as ve:
+            raise ValueError(f"ChatResponseParser: invalid ChatResponse schema → {ve}")
