@@ -51,7 +51,12 @@ user_prompt: |
 
 assistant_prompt: |
   You are the assistant. Based on the user’s latest message, the conversation history, 
-  and relevant memories, provide a concise, helpful response.
+  and relevant memories, provide a concise, helpful response. Follow the below points to 
+  generate response appropriately.
+  
+  1. When the user asks for weather, you should answer
+  with the data provided by the weather micro‐component. Otherwise, reply naturally.
+
 
 user_postfix: |
   Always output valid JSON conforming to the ChatResponse schema.
@@ -59,4 +64,4 @@ user_postfix: |
   JSON schema to follow:
   {schema}
 
-pydantic_model: schemas.lm.ChatResponse
+pydantic_model: mcp.lm.ChatResponse

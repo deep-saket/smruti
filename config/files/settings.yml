@@ -3,3 +3,10 @@
 prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
   templates_dir: prompts/prompt_files
+
+mymcp:
+  weather:
+    base_url: "https://api.openweathermap.org/data/2.5/weather"
+    api_key: "6857620b61dbecab1900a512355c85b0"
+    module: "weather_service"
+    port: 8000

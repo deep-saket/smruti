@@ -2,11 +2,12 @@
 
 from modules.audio import AudioRecorder, AudioPlayer
 from models.OpenAIWhisperTinyInfer import OpenAIWhisperTinyInfer
-from models import Qwen25Infer, QwenV25Infer
+from models import QwenV25Infer
 from models.VITSTTSInfer import VITSTTSInfer
 from prompts import PromptBuilderMain
 from memory import ImmediateMemory
 from memory import ShortTermMemory
+from modules.mcp.weather import WeatherComponent
 
 def main():
     # Initialize I/O & models
@@ -53,6 +54,12 @@ def main():
             print("📚 You said:")
             for h in hits:
                 print("   ", h)
+            continue
+
+        if user_text.lower().startswith("weather in ") or user_text.lower().startswith("what's the weather in "):
+            city = user_text.split("in", 1)[1].strip()
+            weather = WeatherComponent()(city)
+            print(f"🌤️  {weather.city}: {weather.description}, {weather.temperature_c}°C, humidity {weather.humidity}%")
             continue
 
         # 4) Build prompts
