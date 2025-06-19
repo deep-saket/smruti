@@ -7,7 +7,7 @@ import faiss
 from dateutil import parser as date_parser
 from datetime import datetime, timedelta
 from common.MemoryComponent import MemoryComponent
-from models import SentenceEmbedderInfer
+from common import InferenceTextEmbeddingComponent
 
 class ShortTermMemory(MemoryComponent):
     """
@@ -18,12 +18,12 @@ class ShortTermMemory(MemoryComponent):
     """
     def __init__(
         self,
-        embed_model_name: str = "all-MiniLM-L6-v2",
+        embedder: InferenceTextEmbeddingComponent,
         capacity: int = 100,
         index_path: str = "short_term.index",
         meta_path: str = "short_term_meta.pkl"
     ):
-        self.embedder   = SentenceEmbedderInfer(embed_model_name)
+        self.embedder   = embedder
         self.capacity   = capacity
         self.index_path = index_path
         self.meta_path  = meta_path

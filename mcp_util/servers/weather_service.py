@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 from fastmcp import FastMCP
 from config.loader import settings
-from modules.services import WeatherComponent
+from modules.services.weather import WeatherComponent
 
 # 1) Make HTTP stateless + return direct JSON
 mcp = FastMCP(
@@ -21,7 +20,7 @@ def get_weather(city: str) -> dict:
     return info.dict()
 
 if __name__ == "__main__":
-    cfg  = settings["mcp_servers"]["weather"]
+    cfg  = settings["mcp_util"]["weather"]
     port = cfg.get("port", 8000)
     print(f"🚀 Starting WeatherService (stateless) on port {port}")
     mcp.run(

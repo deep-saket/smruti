@@ -4,9 +4,29 @@ prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
   templates_dir: prompts/prompt_files
 
-mymcp:
+mcp:
   weather:
     base_url: "https://api.openweathermap.org/data/2.5/weather"
     api_key: "6857620b61dbecab1900a512355c85b0"
     module: "weather_service"
     port: 8000
+    server_url: "http://localhost:8000/mcp"
+    tool_name: get_weather
+
+agent:
+  mcp_processor: ["WeatherClient"]
+  models: ["OpenAIWhisperTinyInfer", "QwenV25Infer", "VITSTTSInfer", "SentenceEmbedderInfer"]
+
+models:
+  OpenAIWhisperTinyInfer:
+    model_name: "openai/whisper-tiny"
+    samplerate: 16000
+  QwenV25Infer:
+    model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
+    device: mps
+  VITSTTSInfer:
+    model_name: "tts_models/en/ljspeech/vits"
+    device: cpu
+  SentenceEmbedderInfer:
+    model_name: "all-MiniLM-L6-v2"
+    device: mps

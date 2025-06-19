@@ -7,7 +7,7 @@ from models.VITSTTSInfer import VITSTTSInfer
 from prompts import PromptBuilderMain
 from memory import ImmediateMemory
 from memory import ShortTermMemory
-from modules.mcp.weather import WeatherComponent
+from modules.services.weather import WeatherComponent
 
 def main():
     # Initialize I/O & models

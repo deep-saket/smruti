@@ -9,7 +9,7 @@ class WeatherComponent(CallableComponent):
     """
     def __init__(self):
         super().__init__()
-        cfg = settings["mcp_servers"]["weather"]
+        cfg = settings["mcp"]["weather"]
         self.url     = cfg["base_url"]
         self.api_key = cfg["api_key"]
         if not self.api_key:
