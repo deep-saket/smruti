@@ -64,4 +64,4 @@ user_postfix: |
   JSON schema to follow:
   {schema}
 
-pydantic_model: mcp_util.lm.ChatResponse
+pydantic_model: schemas.lm.ChatResponse

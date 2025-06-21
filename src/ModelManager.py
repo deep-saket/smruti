@@ -19,12 +19,17 @@ class ModelManager(BaseComponent):
 
     def _load_models(self):
         models_pkg = importlib.import_module("models")
-        for class_name in settings["agent"]["models"]:
-            try:
-                cls = getattr(models_pkg, class_name)
-            except AttributeError:
-                raise ImportError(f"Model class '{class_name}' not found in 'models' package")
-            cfg = settings["models"].get(class_name, {})
-            instance = cls(**cfg)
+        instantiated = {}
+        for attr_name, class_name in settings["agent"]["models"]:
+            if class_name in instantiated:
+                instance = instantiated[class_name]
+            else:
+                try:
+                    cls = getattr(models_pkg, class_name)
+                except AttributeError:
+                    raise ImportError(f"Model class '{class_name}' not found in 'models' package")
+                cfg = settings["models"].get(class_name, {})
+                instance = cls(**cfg)
             # attach to the class so you can do ModelManager.<ClassName>
-            setattr(ModelManager, class_name, instance)
+            setattr(ModelManager, attr_name, instance)
+            instantiated[class_name] = instance

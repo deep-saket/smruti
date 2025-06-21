@@ -7,9 +7,8 @@ from modules.audio import AudioRecorder
 from modules.audio import AudioPlayer
 from memory.ImmediateMemory import ImmediateMemory
 from memory.ShortTermMemory import ShortTermMemory
-from modules.processing.LLMResponseParser import LLMResponseParser
-from config.loader import settings
-
+from modules.processing import LLMResponseParser
+from src.ToolsDecider import ToolsDecider
 
 class AgentSmruti(BaseComponent):
     """
@@ -21,19 +20,20 @@ class AgentSmruti(BaseComponent):
         super().__init__()
         # core components
         self.model_manager = ModelManager()
-        # alias common models
-        self.stt = self.model_manager.OpenAIWhisperTinyInfer
-        self.llm = self.model_manager.QwenV25Infer
-        self.tts = self.model_manager.VITSTTSInfer
-        self.embedder = self.model_manager.SentenceEmbedderInfer
 
         self.mcp = MCPProcessor()
-        self.prompt_builder = PromptBuilderMain(settings["prompt_builder"])
+
+        self.prompt_builder = PromptBuilderMain()
+        self.parser = LLMResponseParser()
+
         self.recorder = AudioRecorder(16000, 1, "int16")
         self.player = AudioPlayer(16000)
+
         self.immediate_memory = ImmediateMemory(capacity=6)
-        self.short_term_memory = ShortTermMemory(self.embedder, capacity=100)
-        self.parser = LLMResponseParser()
+        self.short_term_memory = ShortTermMemory(ModelManager.embedder, capacity=100)
+
+        # initialize the tool decider
+        self.tools_decider = ToolsDecider()
 
     def record_audio(self, seconds: int = 5):
         """Record raw audio from microphone."""
@@ -41,7 +41,7 @@ class AgentSmruti(BaseComponent):
 
     def transcribe(self, audio) -> str:
         """Convert audio to text."""
-        text = self.stt.infer(audio).strip()
+        text = ModelManager.stt.infer(audio).strip()
         self.logger.info(f"STT result: {text!r}")
         return text
 
@@ -78,18 +78,28 @@ class AgentSmruti(BaseComponent):
 
     def generate_response(self, prompt: str) -> str:
         """Call the LLM model and then MCP processors."""
-        raw = self.llm.infer(prompt, max_length=256)
+        raw = ModelManager.llm.infer(prompt, max_length=256)
         self.logger.info(f"LLM raw output: {raw!r}")
         # optional post-processing via MCP chain
         processed = self.mcp(raw)
         return processed
 
+    def parse_response(self, raw_response: str) -> list:
+        """Parse the raw LLM text into sentences."""
+        return self.parser(raw_response).get("sentences", [])
+
+    def play_response(self, sentences: list):
+        """Play the parsed sentences via TTS."""
+        for sent in sentences:
+            wav = ModelManager.tts.infer(sent)
+            self.player.play(wav)
+
+
     def parse_and_play(self, raw_response: str):
         """Parse the raw LLM text into sentences and play via TTS."""
-        parts = self.parser(raw_response).get("sentences", [])
-        for sent in parts:
-            wav = self.tts.infer(sent)
-            self.player.play(wav)
+        sentences = self.parse_response(raw_response)
+        self.play_response(sentences)
+
 
     def run(self):
         """Main interaction loop."""
@@ -116,4 +126,5 @@ class AgentSmruti(BaseComponent):
 
             # speak out
             print("🔊 Speaking response...")
+            
             self.parse_and_play(response)

@@ -1,0 +1,26 @@
+system_prompt: |
+  You are a tool selector for an interactive multimodal agent.
+  For any user query, choose one or more of these tools:
+    • weather – fetch current weather by location  
+    • vlm     – analyze visual context via vision-language model  
+    • none    – no external tool needed  
+
+user_prompt: "{{user_input}}"
+
+assistant_prompt: |
+  Analyze the user’s query and produce a JSON object with:
+    • tools: an array of objects, each with:
+        – tool:       "weather" | "vlm" | "none"  
+        – requires_media: "image" | "video" | null  
+        – parameters: a JSON object of any parameters (e.g. location)  
+  Output exactly and only that JSON.
+
+user_postfix: |
+  Validate your output against this schema:
+  {schema}
+
+pydantic_model: "schemas.lm.prompt_tool.ToolsSelection"
+
+tool_mapping:
+  weather: WeatherClient
+  vlm: VisualLanguageModelClient

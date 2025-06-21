@@ -15,7 +15,11 @@ mcp:
 
 agent:
   mcp_processor: ["WeatherClient"]
-  models: ["OpenAIWhisperTinyInfer", "QwenV25Infer", "VITSTTSInfer", "SentenceEmbedderInfer"]
+  models:
+    stt: "OpenAIWhisperTinyInfer",
+    llm: "QwenV25Infer"
+    tts: "VITSTTSInfer",
+    vlm: "SentenceEmbedderInfer"
 
 models:
   OpenAIWhisperTinyInfer:
