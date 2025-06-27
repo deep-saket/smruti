@@ -12,17 +12,6 @@ mcp:
     server_url: "http://localhost:8000/mcp"
     tool_name: get_weather
 
-agent:
-  mcp_processor:
-    - WeatherClient
-  models:
-    stt: "OpenAIWhisperTinyInfer"
-    llm: "QwenV25Infer"
-    tts: "VITSTTSInfer"
-    vlm: "QwenV25Infer"
-    ner: "GLiNERInfer"
-    embedder: "SentenceEmbedderInfer"
-
 models:
   OpenAIWhisperTinyInfer:
     model_name: "openai/whisper-tiny"

@@ -1,6 +1,6 @@
 import importlib
 from common import BaseComponent
-from config.loader import settings
+from config.loader import settings, agent
 
 class ModelManager(BaseComponent):
     """
@@ -20,7 +20,7 @@ class ModelManager(BaseComponent):
     def _load_models(self):
         models_pkg = importlib.import_module("models")
         instantiated = {}
-        for attr_name, class_name in settings["agent"]["models"].items():
+        for attr_name, class_name in agent["models"].items():
             if class_name in instantiated:
                 instance = instantiated[class_name]
             else:

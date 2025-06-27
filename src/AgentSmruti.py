@@ -1,5 +1,5 @@
 from common.BaseComponent import BaseComponent
-from config.loader import settings
+from config.loader import agent, settings
 from models.ModelManager import ModelManager
 from src.MCPProcessor import MCPProcessor
 from prompts import PromptBuilderMain
@@ -34,6 +34,8 @@ class AgentSmruti(BaseComponent):
 
         # initialize the tool decider
         self.tools_decider = ToolsDecider()
+
+        self.charactor_details = agent["details"]
 
     def record_audio(self, seconds: int = 5):
         """Record raw audio from microphone."""
@@ -73,15 +75,19 @@ class AgentSmruti(BaseComponent):
     def build_prompt(self, **kwargs) -> str:
         """Construct the LLM prompt from dialogue history."""
         history = self.immediate_memory.get()
-        prompt = self.prompt_builder.build(history, **kwargs)
+        prompt = self.prompt_builder(context=history, charactor_details=self.charactor_details, **kwargs)
         return prompt
 
     def generate_response(self, prompt: str) -> str:
         """Call the LLM model and then MCP processors."""
-        raw = ModelManager.llm.infer(prompt, max_length=256)
+        raw = ModelManager.llm.infer(
+                    system_prompt=prompt.get("system"),
+                    prompt=prompt.get("user"),
+                    assistant_message=prompt.get("assistant")
+        )
         self.logger.info(f"LLM raw output: {raw!r}")
         # optional post-processing via MCP chain
-        processed = self.mcp(raw)
+        processed = self.prompt_builder.parser(raw)
         return processed
 
     def parse_response(self, raw_response: str) -> list:
@@ -123,9 +129,14 @@ class AgentSmruti(BaseComponent):
                 break
 
             # build prompt and get assistant reply
-            prompt = self.build_prompt(mcp_results=mcp_results)
+            prompt = self.build_prompt(new_message=user_text,
+                                       memory_snippets="",
+                                       memory_writes="",
+                                       mcp_results=mcp_results)
             print("💬 Generating response...")
             response = self.generate_response(prompt)
+
+            parsed_response = self.parse_response(response)
 
             # store assistant turn
             self.add_to_memory("assistant", response)
