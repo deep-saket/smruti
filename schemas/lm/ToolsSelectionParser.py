@@ -7,5 +7,5 @@ class ToolsSelectionParser:
         """
         Cleans up the raw LLM output and parses it into a ToolsSelection model.
         """
-        cleaned = DirtyJsonParser.ensure_json(raw)
-        return ToolsSelection.parse_raw(cleaned)
+        cleaned = DirtyJsonParser.parse(raw)
+        return ToolsSelection.model_validate(cleaned)

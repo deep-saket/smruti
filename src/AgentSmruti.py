@@ -1,7 +1,7 @@
-import sys
 from common.BaseComponent import BaseComponent
-from .ModelManager import ModelManager
-from .MCPProcessor import MCPProcessor
+from config.loader import settings
+from models.ModelManager import ModelManager
+from src.MCPProcessor import MCPProcessor
 from prompts import PromptBuilderMain
 from modules.audio import AudioRecorder
 from modules.audio import AudioPlayer
@@ -10,18 +10,18 @@ from memory.ShortTermMemory import ShortTermMemory
 from modules.processing import LLMResponseParser
 from src.ToolsDecider import ToolsDecider
 
+
 class AgentSmruti(BaseComponent):
     """
     High-level agent that ties together audio I/O, models, memory, prompt building,
     MCP processing, and response playback in a modular fashion.
     """
+    ModelManager()
 
     def __init__(self):
         super().__init__()
         # core components
-        self.model_manager = ModelManager()
-
-        self.mcp = MCPProcessor()
+        self.mcp_processor = MCPProcessor()
 
         self.prompt_builder = PromptBuilderMain()
         self.parser = LLMResponseParser()
@@ -30,7 +30,7 @@ class AgentSmruti(BaseComponent):
         self.player = AudioPlayer(16000)
 
         self.immediate_memory = ImmediateMemory(capacity=6)
-        self.short_term_memory = ShortTermMemory(ModelManager.embedder, capacity=100)
+        self.short_term_memory = ShortTermMemory(getattr(ModelManager, 'embedder'), capacity=100)
 
         # initialize the tool decider
         self.tools_decider = ToolsDecider()
@@ -70,10 +70,10 @@ class AgentSmruti(BaseComponent):
 
         return True
 
-    def build_prompt(self) -> str:
+    def build_prompt(self, **kwargs) -> str:
         """Construct the LLM prompt from dialogue history."""
         history = self.immediate_memory.get()
-        prompt = self.prompt_builder.build(history)
+        prompt = self.prompt_builder.build(history, **kwargs)
         return prompt
 
     def generate_response(self, prompt: str) -> str:
@@ -100,6 +100,9 @@ class AgentSmruti(BaseComponent):
         sentences = self.parse_response(raw_response)
         self.play_response(sentences)
 
+    def is_english(self, text: str) -> bool:
+        """Return True if text is made of basic ASCII chars only."""
+        return all(ord(ch) < 128 for ch in text)
 
     def run(self):
         """Main interaction loop."""
@@ -109,6 +112,10 @@ class AgentSmruti(BaseComponent):
             user_text = self.transcribe(audio)
             print(f"You said: {user_text}")
 
+            # Get available tools
+            necessary_tools = self.tools_decider.decide_tools(user_text)
+            mcp_results = self.mcp_processor(necessary_tools, user_text)
+
             # store user turn
             self.add_to_memory("user", user_text)
             if not self.check_special_commands(user_text):
@@ -116,7 +123,7 @@ class AgentSmruti(BaseComponent):
                 break
 
             # build prompt and get assistant reply
-            prompt = self.build_prompt()
+            prompt = self.build_prompt(mcp_results=mcp_results)
             print("💬 Generating response...")
             response = self.generate_response(prompt)
 
@@ -128,3 +135,7 @@ class AgentSmruti(BaseComponent):
             print("🔊 Speaking response...")
             
             self.parse_and_play(response)
+
+if __name__ == "__main__":
+    ags = AgentSmruti()
+    ags.run()

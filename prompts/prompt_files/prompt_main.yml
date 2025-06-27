@@ -56,6 +56,10 @@ assistant_prompt: |
   
   1. When the user asks for weather, you should answer
   with the data provided by the weather micro‐component. Otherwise, reply naturally.
+  2. Data provided by every micro-components can be found below in "Useful information" section
+  
+  Usefull information:
+  {mcp_results}
 
 
 user_postfix: |

@@ -2,9 +2,10 @@
 
 from modules.audio import AudioRecorder, AudioPlayer
 from models import OpenAIWhisperTinyInfer
-from models import Qwen25Infer
+from models import Qwen25Infer, QwenV25Infer
 from models import VITSTTSInfer
 from modules.processing import LLMResponseParser
+from models.ModelManager import ModelManager
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -16,8 +17,10 @@ def main():
     player   = AudioPlayer(samplerate=16000)
     stt      = OpenAIWhisperTinyInfer()  # speech-to-text
     llm      = Qwen25Infer(model_name="Qwen/Qwen2.5-3B")  # LLM
+    vlm      = QwenV25Infer(model_name="Qwen/Qwen2.5-VL-3B-Instruct")  # LLM
     tts      = VITSTTSInfer(model_name="tts_models/en/ljspeech/vits", device="cpu")  # text-to-speech
     llm_response_parser   = LLMResponseParser()  # LLMResponseParser instance
+    ModelManager()
 
     print("🤖 Interactive voice assistant (say 'exit' to quit)")
 

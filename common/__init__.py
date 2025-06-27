@@ -10,3 +10,4 @@ from common.InferenceTextEmbeddingComponent import InferenceTextEmbeddingCompone
 from common.MemoryComponent import MemoryComponent
 from common.PromptBuilderComponent import PromptBuilderComponent
 from common.MCPClientComponentBase import MCPClientComponent
+from common.InferenceNERComponent import InferenceNERComponent

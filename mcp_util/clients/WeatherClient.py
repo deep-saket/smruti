@@ -1,6 +1,5 @@
-from fastmcp import Client
 from common import MCPClientComponent
-import json
+from models.ModelManager import ModelManager
 
 class WeatherClient(MCPClientComponent):
     """
@@ -8,4 +7,10 @@ class WeatherClient(MCPClientComponent):
     """
 
     async def _process_prompt(self, prompt, *args, **kwargs):
-        pass
+        cities = ModelManager.ner.infer(prompt, ["city"])
+
+        weather_info = []
+        for city in cities:
+            weather_info.append(str(self.request(city=city)))
+
+        return weather_info

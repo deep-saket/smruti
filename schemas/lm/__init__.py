@@ -3,4 +3,4 @@ from schemas.lm.ResponseEnvelope import ResponseEnvelope
 from schemas.lm.ResponseEnvelopeBuilder import ResponseEnvelopeBuilder
 from schemas.lm.ChatResponseParser import ChatResponseParser
 from schemas.lm.ToolsSelection import ToolsSelection
-from schemas.lm.ToolsSelectionParser import ToolSelectionParser
+from schemas.lm.ToolsSelectionParser import ToolsSelectionParser

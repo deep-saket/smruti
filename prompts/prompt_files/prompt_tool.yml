@@ -19,8 +19,8 @@ user_postfix: |
   Validate your output against this schema:
   {schema}
 
-pydantic_model: "schemas.lm.prompt_tool.ToolsSelection"
+pydantic_model: "schemas.lm.ToolsSelection"
 
 tool_mapping:
-  weather: WeatherClient
-  vlm: VisualLanguageModelClient
+  weather: mcp_util.clients.WeatherClient
+  # vlm: VisualLanguageModelClient

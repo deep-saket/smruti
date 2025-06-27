@@ -1,5 +1,4 @@
 # config/files/settings.yml
-
 prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
   templates_dir: prompts/prompt_files
@@ -14,12 +13,15 @@ mcp:
     tool_name: get_weather
 
 agent:
-  mcp_processor: ["WeatherClient"]
+  mcp_processor:
+    - WeatherClient
   models:
-    stt: "OpenAIWhisperTinyInfer",
+    stt: "OpenAIWhisperTinyInfer"
     llm: "QwenV25Infer"
-    tts: "VITSTTSInfer",
-    vlm: "SentenceEmbedderInfer"
+    tts: "VITSTTSInfer"
+    vlm: "QwenV25Infer"
+    ner: "GLiNERInfer"
+    embedder: "SentenceEmbedderInfer"
 
 models:
   OpenAIWhisperTinyInfer:
@@ -33,4 +35,7 @@ models:
     device: cpu
   SentenceEmbedderInfer:
     model_name: "all-MiniLM-L6-v2"
+    device: mps
+  GLiNERInfer:
+    model_name: "urchade/gliner_base"
     device: mps

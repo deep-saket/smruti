@@ -20,7 +20,7 @@ class ModelManager(BaseComponent):
     def _load_models(self):
         models_pkg = importlib.import_module("models")
         instantiated = {}
-        for attr_name, class_name in settings["agent"]["models"]:
+        for attr_name, class_name in settings["agent"]["models"].items():
             if class_name in instantiated:
                 instance = instantiated[class_name]
             else:

@@ -1,7 +1,7 @@
 import importlib
 from typing import List, Dict, Any
 from common import CallableComponent
-from .ModelManager import ModelManager
+from models.ModelManager import ModelManager
 from prompts.PromptBuilderTool import PromptBuilderTool
 
 class ToolsDecider(CallableComponent):
@@ -35,7 +35,7 @@ class ToolsDecider(CallableComponent):
         # parser for the tool‐selection JSON
         self.parser = self.prompt_builder.parser
 
-    def __call__(self, user_input: str) -> List[Dict[str, Any]]:
+    def decide_tools(self, user_input: str) -> List[Dict[str, Any]]:
         """
         Returns a list of dicts, each with:
           - tool           : the mapped tool class
@@ -63,3 +63,5 @@ class ToolsDecider(CallableComponent):
             })
         return results
 
+    def __call__(self, user_input: str) -> List[Dict[str, Any]]:
+        return self.decide_tools(user_input)
