@@ -19,6 +19,6 @@ class ChatResponseParser:
 
         # 2) Validate against ChatResponse
         try:
-            return ChatResponse.parse_obj(data)
+            return ChatResponse.model_validate(data)
         except ValidationError as ve:
             raise ValueError(f"ChatResponseParser: invalid ChatResponse schema → {ve}")

@@ -101,9 +101,8 @@ class AgentSmruti(BaseComponent):
             self.player.play(wav)
 
 
-    def parse_and_play(self, raw_response: str):
+    def play(self, sentences: str):
         """Parse the raw LLM text into sentences and play via TTS."""
-        sentences = self.parse_response(raw_response)
         self.play_response(sentences)
 
     def is_english(self, text: str) -> bool:
@@ -139,13 +138,13 @@ class AgentSmruti(BaseComponent):
             parsed_response = self.parse_response(response)
 
             # store assistant turn
-            self.add_to_memory("assistant", response)
-            print(f"Assistant: {response}")
+            self.add_to_memory("assistant", parsed_response)
+            print(f"Assistant: {parsed_response}")
 
             # speak out
             print("🔊 Speaking response...")
             
-            self.parse_and_play(response)
+            self.play(parsed_response)
 
 if __name__ == "__main__":
     ags = AgentSmruti()
