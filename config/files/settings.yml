@@ -1,4 +1,3 @@
-# config/files/settings.yml
 prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
   templates_dir: prompts/prompt_files
@@ -28,3 +27,11 @@ models:
   GLiNERInfer:
     model_name: "urchade/gliner_base"
     device: mps
+  SpeakerEmbeddingInfer:
+    model_name: "speechbrain/spkrec-ecapa-voxceleb"
+
+memory:
+  dir: "{project_root}/.memory/"
+
+db:
+  audio_recogniser: "{project_root}/.cache/audio_embeddings.npz"

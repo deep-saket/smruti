@@ -1,1 +1,3 @@
 from modules.processing.LLMResponseParser import LLMResponseParser
+from modules.processing.NERProcessor import NERProcessor
+from modules.processing.MemoryFetcher import MemoryFetcher

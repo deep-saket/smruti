@@ -4,4 +4,5 @@ from  models.VITSTTSInfer import VITSTTSInfer
 from models.SentenceEmbedderInfer import SentenceEmbedderInfer
 from models.QwenV25Infer import QwenV25Infer
 from models.GLiNERInfer import GLiNERInfer
-from  models.ModelManager import ModelManager
+from models.SpeakerEmbeddingInfer import SpeakerEmbeddingInfer
+from models.ModelManager import ModelManager

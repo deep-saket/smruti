@@ -1,0 +1,47 @@
+User Audio/Dialogue
+        │
+        ▼
+┌───────────────────────────────────┐
+│      Speaker Recognition          │
+└───────────────────────────────────┘
+        │ identifies
+        ├─ Known User ───► Retrieve Profile ───► Personal Greeting
+        └─ New User ────► Create Profile ────► Store Embedding
+        │
+        ▼
+┌───────────────────────────────────┐
+│        Named Entity Recognition   │
+└───────────────────────────────────┘
+        │ extracts
+        ▼
+┌───────────────────────────────────┐
+│          Person Memory            │
+│   (User Profiles, JSON/SQLite)    │
+└───────────────────────────────────┘
+        │ updates
+        ▼
+┌───────────────────┬───────────────────┐
+│ Short-Term Memory │ Episodic Memory   │
+└───────────────────┴───────────────────┘
+        │ provides context/history
+        ▼
+┌───────────────────────────────────┐
+│    Dialogue Manager (Prompt)      │
+└───────────────────────────────────┘
+        │ generates personalized response
+        ▼
+┌───────────────────────────────────┐
+│           Agent Response          │
+└───────────────────────────────────┘
+
+                      ┌─────────────────────────────────┐
+                      │         MemoryManager           │
+                      └───────────────┬─────────────────┘
+                                      │ orchestrates
+     ┌────────────────┬───────────────┴───────────┬─────────────────┐
+     │                │                           │                 │
+┌────▼───────┐  ┌─────▼───────┐         ┌─────────▼───────┐ ┌───────▼───────┐
+│ Short-Term │  │  Episodic   │         │     Person      │ │ Semantic &    │
+│   Memory   │  │   Memory    │         │     Memory      │ │ Procedural    │
+└────────────┘  └─────────────┘         └─────────────────┘ └───────────────┘
+(recent context)(events, timestamps)   (user-specific data)(facts & tasks)

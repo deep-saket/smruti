@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer
-from common import InferenceTextEmbeddingComponent
+from common import InferenceEmbeddingComponent
 
-class SentenceEmbedderInfer(InferenceTextEmbeddingComponent):
+class SentenceEmbedderInfer(InferenceEmbeddingComponent):
     """
     Wraps a SentenceTransformer model to produce text embeddings.
     """
@@ -26,9 +26,9 @@ class SentenceEmbedderInfer(InferenceTextEmbeddingComponent):
         self.model = SentenceTransformer(model_name, device=str(self.device))
 
 
-    def embed(self, text: str) -> np.ndarray:
+    def embed(self, model_input: str) -> np.ndarray:
             """
             Encode the input text into a numpy float32 embedding.
             """
-            emb = self.model.encode([text])[0]
+            emb = self.model.encode([model_input])[0]
             return emb.astype(np.float32)

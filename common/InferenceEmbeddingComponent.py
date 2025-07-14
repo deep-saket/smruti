@@ -2,15 +2,15 @@ from common.BaseComponent import BaseComponent
 from abc import abstractmethod
 import numpy as np
 
-class InferenceTextEmbeddingComponent(BaseComponent):
+class InferenceEmbeddingComponent(BaseComponent):
     """
     Base class for all text embedding components.
 
     Subclasses must implement:
-        - embed(text: str) -> np.ndarray
+        - embed(text) -> np.ndarray
     """
     @abstractmethod
-    def embed(self, text: str) -> np.ndarray:
+    def embed(self, model_input) -> np.ndarray:
         """
         Produce a fixed‐size embedding for the given text.
         """

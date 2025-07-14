@@ -3,12 +3,14 @@ from config.loader import agent, settings
 from models.ModelManager import ModelManager
 from src.MCPProcessor import MCPProcessor
 from prompts import PromptBuilderMain
-from modules.audio import AudioRecorder
-from modules.audio import AudioPlayer
+from modules.audio import AudioRecorder, AudioPlayer, AudioRecogniserManager
 from memory.ImmediateMemory import ImmediateMemory
 from memory.ShortTermMemory import ShortTermMemory
-from modules.processing import LLMResponseParser
+from modules.processing import LLMResponseParser, MemoryFetcher
 from src.ToolsDecider import ToolsDecider
+from modules.processing import NERProcessor
+from memory import MemoryManager
+import numpy as np
 
 
 class AgentSmruti(BaseComponent):
@@ -30,16 +32,27 @@ class AgentSmruti(BaseComponent):
         self.player = AudioPlayer(16000)
 
         self.immediate_memory = ImmediateMemory(capacity=6)
-        self.short_term_memory = ShortTermMemory(getattr(ModelManager, 'embedder'), capacity=100)
 
         # initialize the tool decider
         self.tools_decider = ToolsDecider()
 
+        self.ner_processor = NERProcessor(getattr(ModelManager, 'ner'))
+        self.memory_manager = MemoryManager()
+        self.memory_fetcher = MemoryFetcher(self.memory_manager, self.ner_processor)
+
         self.charactor_details = agent["details"]
+
+        self.audio_recogniser = AudioRecogniserManager(
+            ModelManager.speaker_embedder,
+            embedding_dim=ModelManager.speaker_embedder.embedding_dim,
+            db_path=settings['db']['audio_recogniser']
+        )
+
+        self.saket_id = "ef87ca7a1f974e89beeadfcc15c4597b"
 
     def record_audio(self, seconds: int = 5):
         """Record raw audio from microphone."""
-        return self.recorder.record(seconds)
+        return self.recorder.record_until_speech_end()
 
     def transcribe(self, audio) -> str:
         """Convert audio to text."""
@@ -50,7 +63,7 @@ class AgentSmruti(BaseComponent):
     def add_to_memory(self, role: str, text: str):
         """Store message in both immediate (dialogue) and semantic memory."""
         self.immediate_memory.add(role, text)
-        self.short_term_memory.add(text)
+        self.memory_manager.short_term.add(text)
 
     def check_special_commands(self, user_text: str) -> bool:
         """
@@ -100,7 +113,6 @@ class AgentSmruti(BaseComponent):
             wav = ModelManager.tts.infer(sent)
             self.player.play(wav)
 
-
     def play(self, sentences: str):
         """Parse the raw LLM text into sentences and play via TTS."""
         self.play_response(sentences)
@@ -112,17 +124,26 @@ class AgentSmruti(BaseComponent):
     def run(self):
         """Main interaction loop."""
         print("🤖 AgentSmruti ready (say 'exit' to quit)")
+        i = 0
         while True:
             audio = self.record_audio()
             user_text = self.transcribe(audio)
             print(f"You said: {user_text}")
+
+            if i == 0:
+                sid, name, score = self.audio_recogniser.verify(audio.astype(np.float32) / np.iinfo(np.int16).max)
+                if sid == self.saket_id:
+                    self.play(["Hello Mr. Saket!! Welcome back."])
+
+            fetched_memory = self.memory_fetcher(self.immediate_memory.get(), self.saket_id)
+
 
             # Get available tools
             necessary_tools = self.tools_decider.decide_tools(user_text)
             mcp_results = self.mcp_processor(necessary_tools, user_text)
 
             # store user turn
-            self.add_to_memory("user", user_text)
+            self.add_to_memory("Saket", user_text)
             if not self.check_special_commands(user_text):
                 print("👋 Goodbye!")
                 break
@@ -138,14 +159,16 @@ class AgentSmruti(BaseComponent):
             parsed_response = self.parse_response(response)
 
             # store assistant turn
-            self.add_to_memory("assistant", parsed_response)
+            self.add_to_memory("Smruti", parsed_response)
             print(f"Assistant: {parsed_response}")
 
             # speak out
             print("🔊 Speaking response...")
             
             self.play(parsed_response)
+            i += 1
 
 if __name__ == "__main__":
     ags = AgentSmruti()
     ags.run()
+

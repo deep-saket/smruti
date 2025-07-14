@@ -1,15 +1,22 @@
-# modules/audio.py
-
 import sounddevice as sd
 import numpy as np
+import webrtcvad
 from queue import Queue
+
 
 class AudioRecorder:
     """
     AudioRecorder captures audio from the default microphone.
-    - samplerate: sampling rate in Hz (default 16000)
-    - channels: number of audio channels (default 1)
-    - dtype: data type for recording (default 'int16')
+
+    Methods:
+    - record(duration): Record a fixed-duration clip.
+    - record_until_speech_end(frame_duration_ms=30, padding_duration_ms=300, vad_mode=1):
+      Record until the user stops speaking (VAD-based).
+
+    Attributes:
+    - samplerate (int): Sampling rate in Hz.
+    - channels (int): Number of audio channels.
+    - dtype (str): Data type for recording (e.g., 'int16').
     """
     def __init__(self, samplerate=16000, channels=1, dtype='int16'):
         self.samplerate = samplerate
@@ -18,8 +25,13 @@ class AudioRecorder:
 
     def record(self, duration):
         """
-        Record audio from the microphone for the specified duration (in seconds).
-        Returns a 1D NumPy array of normalized float32 samples.
+        Record audio from the microphone for the specified duration.
+
+        Args:
+            duration (float): Length of recording in seconds.
+
+        Returns:
+            np.ndarray: 1D float32 array of normalized audio samples.
         """
         print(f"🎙️  Recording for {duration} seconds...")
         recording = sd.rec(
@@ -32,10 +44,79 @@ class AudioRecorder:
         audio = recording.flatten().astype(np.float32) / np.iinfo(self.dtype).max
         return audio
 
+    def record_until_speech_end(self, frame_duration_ms=30, padding_duration_ms=300, vad_mode=1):
+        """
+        Record audio until the user stops speaking, using WebRTC VAD.
+
+        This method continuously captures short frames and uses a
+        Voice Activity Detector to detect speech onset and offset.
+
+        Args:
+            frame_duration_ms (int): Frame length for VAD in milliseconds (10, 20, or 30).
+            padding_duration_ms (int): Amount of trailing silence (ms) before stopping.
+            vad_mode (int): VAD aggressiveness (0-3, higher is less sensitive).
+
+        Returns:
+            np.ndarray: 1D float32 array of the captured utterance.
+        """
+        # Calculate sizes
+        frame_size = int(self.samplerate * frame_duration_ms / 1000)
+        padding_frames = int(padding_duration_ms / frame_duration_ms)
+
+        # Prepare VAD and queue
+        vad = webrtcvad.Vad(vad_mode)
+        q = Queue()
+        stream = sd.InputStream(
+            samplerate=self.samplerate,
+            channels=self.channels,
+            dtype=self.dtype,
+            blocksize=frame_size,
+            callback=lambda indata, frames, time, status: q.put(indata.copy())
+        )
+        stream.start()
+
+        ring_buffer = []
+        voiced_frames = []
+        triggered = False
+        silent_counter = 0
+
+        while True:
+            frame = q.get()
+            pcm = frame.tobytes()
+            is_speech = vad.is_speech(pcm, sample_rate=self.samplerate)
+
+            if not triggered:
+                if is_speech:
+                    triggered = True
+                    voiced_frames.extend(ring_buffer)
+                    ring_buffer.clear()
+                else:
+                    ring_buffer.append(frame)
+                    if len(ring_buffer) > padding_frames:
+                        ring_buffer.pop(0)
+            else:
+                voiced_frames.append(frame)
+                if not is_speech:
+                    silent_counter += 1
+                    if silent_counter > padding_frames:
+                        break
+                else:
+                    silent_counter = 0
+
+        stream.stop()
+        stream.close()
+
+        # Concatenate, normalize, and return
+        audio = np.concatenate(voiced_frames, axis=0)
+        return audio.flatten().astype(np.float32) / np.iinfo(self.dtype).max
+
+
 class AudioPlayer:
     """
     AudioPlayer plays back audio arrays through the default speaker.
-    - samplerate: sampling rate in Hz (default 16000)
+
+    Attributes:
+    - samplerate (int): Sampling rate in Hz.
     """
     def __init__(self, samplerate=16000):
         self.samplerate = samplerate
@@ -43,18 +124,24 @@ class AudioPlayer:
     def play(self, audio_array):
         """
         Play a 1D NumPy audio array.
+
+        Args:
+            audio_array (np.ndarray): 1D array of audio samples (float or int).
         """
         print("🔊 Playing back the recorded audio...")
         sd.play(audio_array, self.samplerate)
         sd.wait()
 
+
 class AudioStreamer:
     """
     Continuously captures audio in fixed-size blocks.
-    - samplerate: sampling rate in Hz.
-    - channels: number of channels.
-    - dtype: audio data type.
-    - block_duration: length of each block in seconds.
+
+    Attributes:
+    - samplerate (int): Sampling rate in Hz.
+    - channels (int): Number of audio channels.
+    - dtype (str): Audio data type.
+    - block_duration (float): Duration of each block in seconds.
     """
     def __init__(self, samplerate=16000, channels=1, dtype='int16', block_duration=1.0):
         self.samplerate = samplerate
@@ -91,6 +178,9 @@ class AudioStreamer:
     def generator(self):
         """
         Yield normalized float32 numpy arrays for each captured block.
+
+        Yields:
+            np.ndarray: 1D float32 audio block.
         """
         while True:
             data = self.queue.get()

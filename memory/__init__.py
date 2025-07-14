@@ -1,2 +1,3 @@
 from memory.ImmediateMemory import ImmediateMemory
 from memory.ShortTermMemory import ShortTermMemory
+from memory.MemoryManager import MemoryManager
