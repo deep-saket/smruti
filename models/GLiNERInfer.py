@@ -46,7 +46,7 @@ class GLiNERInfer(InferenceNERComponent):
             A list of dictionaries with 'entity' and 'type' keys.
         """
         if not isinstance(text, str) or not text.strip():
-            raise ValueError("Input text must be a non-empty string.")
+            return []
         if not isinstance(labels, list) or not all(isinstance(l, str) for l in labels):
             raise ValueError("Labels must be a list of strings.")
 

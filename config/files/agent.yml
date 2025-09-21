@@ -1,9 +1,9 @@
 mcp_processor:
   - WeatherClient
 models:
-  stt: "OpenAIWhisperTinyInfer"
+  stt: "WhisperMediumInfer"
   llm: "QwenV25Infer"
-  tts: "VITSTTSInfer"
+  tts: "SpeechT5TTSInfer"
   vlm: "QwenV25Infer"
   ner: "GLiNERInfer"
   embedder: "SentenceEmbedderInfer"

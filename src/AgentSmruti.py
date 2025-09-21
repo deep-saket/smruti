@@ -5,12 +5,12 @@ from src.MCPProcessor import MCPProcessor
 from prompts import PromptBuilderMain
 from modules.audio import AudioRecorder, AudioPlayer, AudioRecogniserManager
 from memory.ImmediateMemory import ImmediateMemory
-from memory.ShortTermMemory import ShortTermMemory
 from modules.processing import LLMResponseParser, MemoryFetcher
 from src.ToolsDecider import ToolsDecider
 from modules.processing import NERProcessor
 from memory import MemoryManager
 import numpy as np
+import os
 
 
 class AgentSmruti(BaseComponent):
@@ -18,10 +18,12 @@ class AgentSmruti(BaseComponent):
     High-level agent that ties together audio I/O, models, memory, prompt building,
     MCP processing, and response playback in a modular fashion.
     """
-    ModelManager()
 
     def __init__(self):
         super().__init__()
+        # Initialize ModelManager here so models are loaded when the agent is created
+        self.model_manager = ModelManager()
+
         # core components
         self.mcp_processor = MCPProcessor()
 
@@ -36,17 +38,27 @@ class AgentSmruti(BaseComponent):
         # initialize the tool decider
         self.tools_decider = ToolsDecider()
 
-        self.ner_processor = NERProcessor(getattr(ModelManager, 'ner'))
+        # Optional NER processor (only if configured)
+        if 'ner' in getattr(ModelManager, '_registry', {}):
+            self.ner_processor = NERProcessor(getattr(ModelManager, 'ner'))
+        else:
+            self.ner_processor = None
+
+        # Memory manager (handles its own missing-model logic)
         self.memory_manager = MemoryManager()
         self.memory_fetcher = MemoryFetcher(self.memory_manager, self.ner_processor)
 
         self.charactor_details = agent["details"]
 
-        self.audio_recogniser = AudioRecogniserManager(
-            ModelManager.speaker_embedder,
-            embedding_dim=ModelManager.speaker_embedder.embedding_dim,
-            db_path=settings['db']['audio_recogniser']
-        )
+        # Optional speaker recogniser (only if embedding model provided)
+        if 'speaker_embedder' in getattr(ModelManager, '_registry', {}):
+            self.audio_recogniser = AudioRecogniserManager(
+                getattr(ModelManager, 'speaker_embedder'),
+                embedding_dim=getattr(ModelManager, 'speaker_embedder').embedding_dim,
+                db_path=settings['db']['audio_recogniser']
+            )
+        else:
+            self.audio_recogniser = None
 
         self.saket_id = "ef87ca7a1f974e89beeadfcc15c4597b"
 
@@ -63,7 +75,13 @@ class AgentSmruti(BaseComponent):
     def add_to_memory(self, role: str, text: str):
         """Store message in both immediate (dialogue) and semantic memory."""
         self.immediate_memory.add(role, text)
-        self.memory_manager.short_term.add(text)
+        # write to short-term memory if available
+        if getattr(self.memory_manager, 'short_term', None) is not None:
+            try:
+                self.memory_manager.short_term.add(text)
+            except Exception:
+                # best-effort: do not let memory writes block the agent
+                self.logger.exception("Failed to write to short-term memory")
 
     def check_special_commands(self, user_text: str) -> bool:
         """
@@ -109,8 +127,22 @@ class AgentSmruti(BaseComponent):
 
     def play_response(self, sentences: list):
         """Play the parsed sentences via TTS."""
+        # Resolve configured speaker embedding path (may be None)
+        embed_path = None
+        try:
+            embed_path = settings.get('tts', {}).get('embedding_path')
+            if embed_path:
+                embed_path = embed_path.format(project_root=self.project_root)
+                if not embed_path or not os.path.exists(embed_path):
+                    # if file missing, ignore and log
+                    self.logger.info(f"TTS embedding not found at {embed_path}; using neutral voice")
+                    embed_path = None
+        except Exception:
+            embed_path = None
+
         for sent in sentences:
-            wav = ModelManager.tts.infer(sent)
+            # Pass speaker_embedding as path or None; SpeechT5TTSInfer handles path/numpy/tensor
+            wav = ModelManager.tts.infer(sent, speaker_embedding=embed_path)
             self.player.play(wav)
 
     def play(self, sentences: str):
@@ -131,9 +163,10 @@ class AgentSmruti(BaseComponent):
             print(f"You said: {user_text}")
 
             if i == 0:
-                sid, name, score = self.audio_recogniser.verify(audio.astype(np.float32) / np.iinfo(np.int16).max)
-                if sid == self.saket_id:
-                    self.play(["Hello Mr. Saket!! Welcome back."])
+                if self.audio_recogniser is not None:
+                    sid, name, score = self.audio_recogniser.verify(audio.astype(np.float32) / np.iinfo(np.int16).max)
+                    if sid == self.saket_id:
+                        self.play(["Hello Mr. Saket!! Welcome back."])
 
             fetched_memory = self.memory_fetcher(self.immediate_memory.get(), self.saket_id)
 
@@ -171,4 +204,3 @@ class AgentSmruti(BaseComponent):
 if __name__ == "__main__":
     ags = AgentSmruti()
     ags.run()
-

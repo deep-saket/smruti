@@ -1,3 +1,4 @@
+# Minimal settings for development and for ModelManager to pick up model configs
 prompt_builder:
   # Directory (relative to PROJECT_ROOT) where prompt YAML templates are stored
   templates_dir: prompts/prompt_files
@@ -12,26 +13,37 @@ mcp:
     tool_name: get_weather
 
 models:
+  WhisperMediumInfer:
+    model_name: "openai/whisper-medium"
+    samplerate: 16000
+    device: "cpu"
   OpenAIWhisperTinyInfer:
     model_name: "openai/whisper-tiny"
     samplerate: 16000
   QwenV25Infer:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
-    device: mps
-  VITSTTSInfer:
-    model_name: "tts_models/en/ljspeech/vits"
-    device: cpu
+    device: "mps"
   SentenceEmbedderInfer:
     model_name: "all-MiniLM-L6-v2"
-    device: mps
+    device: "mps"
   GLiNERInfer:
     model_name: "urchade/gliner_base"
-    device: mps
+    device: "mps"
   SpeakerEmbeddingInfer:
     model_name: "speechbrain/spkrec-ecapa-voxceleb"
+  SpeechT5TTSInfer:
+    model_name: "microsoft/speecht5_tts"
+    vocoder_name: "microsoft/speecht5_hifigan"
+    samplerate: 16000
+    device: "cpu"
 
 memory:
   dir: "{project_root}/.memory/"
 
 db:
   audio_recogniser: "{project_root}/.cache/audio_embeddings.npz"
+
+# Path (absolute or repo-relative) to a speaker embedding .npy file used by TTS.
+# If empty or null, TTS will run without a speaker embedding (neutral voice).
+tts:
+  embedding_path: "{project_root}/artefacts/tts_kn.npy"

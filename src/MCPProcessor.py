@@ -26,9 +26,20 @@ class MCPProcessor(CallableComponent):
     def __call__(self, mcp_details, prompt: str) -> list:
         """
         Passes the prompt through each processor in turn.
+        Expects `mcp_details` to be an iterable of dict-like entries with a "tool" key.
+        Returns a list of processor outputs (in the same order as `mcp_details`).
         """
         results = []
         for mcp_detail in mcp_details:
-            if self.processors.get(mcp_detail["tool"]):
-                results.append(self.processors.get(mcp_detail["tool"]))(prompt)
+            proc = self.processors.get(mcp_detail.get("tool")) if isinstance(mcp_detail, dict) else self.processors.get(mcp_detail)
+            if proc:
+                # Call the processor with the prompt and append its result
+                try:
+                    res = proc(prompt)
+                except TypeError:
+                    # Some processors may expect (prompt, **kwargs) or be callables that
+                    # expose a `__call__` with different signature — try calling without
+                    # positional args as a fallback.
+                    res = proc()
+                results.append(res)
         return results

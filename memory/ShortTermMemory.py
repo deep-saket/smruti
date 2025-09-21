@@ -53,7 +53,7 @@ class ShortTermMemory(MemoryComponent):
         """
         Embed text and add to FAISS index, evicting oldest if over capacity.
         """
-        ts = datetime.now()
+        ts = str(datetime.now())
         emb = self.embedder.embed(text)
         with self._lock:
             self.index.add(np.expand_dims(emb, 0))

@@ -26,8 +26,10 @@ class ModelManager(BaseComponent):
             else:
                 try:
                     cls = getattr(models_pkg, class_name)
-                except AttributeError:
-                    raise ImportError(f"Model class '{class_name}' not found in 'models' package")
+                except AttributeError as e:
+                    raise ImportError(f"Model class '{class_name}' not found in 'models' package : {e}")
+                except Exception as e:
+                    raise ImportError(f"Error importing model class '{class_name}': {e}") from e
                 cfg = settings["models"].get(class_name, {})
                 instance = cls(**cfg)
             # attach to the class so you can do ModelManager.<ClassName>

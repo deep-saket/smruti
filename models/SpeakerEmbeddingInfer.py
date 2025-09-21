@@ -1,7 +1,7 @@
 from common import InferenceEmbeddingComponent
 import torch
 from torch.nn.functional import normalize
-from speechbrain.pretrained import SpeakerRecognition
+from speechbrain.inference import SpeakerRecognition
 import numpy as np
 
 class SpeakerEmbeddingInfer(InferenceEmbeddingComponent):

@@ -2,6 +2,7 @@ import sounddevice as sd
 import numpy as np
 import webrtcvad
 from queue import Queue
+from models import ModelManager
 
 
 class AudioRecorder:
@@ -18,10 +19,11 @@ class AudioRecorder:
     - channels (int): Number of audio channels.
     - dtype (str): Data type for recording (e.g., 'int16').
     """
-    def __init__(self, samplerate=16000, channels=1, dtype='int16'):
+    def __init__(self, samplerate=16000, channels=1, dtype='int16', speech_denoiser=None):
         self.samplerate = samplerate
         self.channels = channels
         self.dtype = dtype
+        self.speech_denoiser = speech_denoiser # if speech_denoiser else ModelManager.speech_denoiser
 
     def record(self, duration):
         """
@@ -42,6 +44,10 @@ class AudioRecorder:
         )
         sd.wait()
         audio = recording.flatten().astype(np.float32) / np.iinfo(self.dtype).max
+
+        if self.speech_denoiser:
+            audio = self.speech_denoiser.process(audio)
+
         return audio
 
     def record_until_speech_end(self, frame_duration_ms=30, padding_duration_ms=300, vad_mode=1):
@@ -108,6 +114,11 @@ class AudioRecorder:
 
         # Concatenate, normalize, and return
         audio = np.concatenate(voiced_frames, axis=0)
+
+        if self.speech_denoiser:
+            t = ModelManager.stt.infer(audio).strip()
+            audio = self.speech_denoiser.process(audio)
+
         return audio.flatten().astype(np.float32) / np.iinfo(self.dtype).max
 
 
@@ -118,7 +129,7 @@ class AudioPlayer:
     Attributes:
     - samplerate (int): Sampling rate in Hz.
     """
-    def __init__(self, samplerate=16000):
+    def __init__(self, samplerate=12000):
         self.samplerate = samplerate
 
     def play(self, audio_array):
