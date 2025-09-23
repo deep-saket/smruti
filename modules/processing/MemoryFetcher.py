@@ -16,10 +16,49 @@ class MemoryFetcher(CallableComponent):
         # 1) Extract points of interest from last n turns
         recent = conversation[-self.n_context:]
         pois = set()
-        for turn in recent:
-            ents = self.ner(turn, keys=["Person","Location","Organization","Position"])
-            for lst in ents.values():
-                pois.update(lst)
+
+        if self.ner is None:
+            # use logger from parent CallableComponent
+            self.logger.debug("No NER processor available; skipping entity extraction.")
+        else:
+            # support both: callable processors (ner(text, keys=...)) and objects with `infer(text, labels)`
+            labels = ["Person", "Location", "Organization", "Position"]
+            for turn in recent:
+                try:
+                    if callable(self.ner):
+                        # try calling with the expected kw arg name used by NERProcessor
+                        try:
+                            ents = self.ner(turn, keys=labels)
+                        except TypeError:
+                            # fallback to positional args or different signature
+                            try:
+                                ents = self.ner(turn, labels)
+                            except Exception:
+                                # as a last resort try `infer`
+                                ents = getattr(self.ner, "infer")(turn, labels)
+                    else:
+                        # object with an infer method (e.g. GLiNERInfer)
+                        infer = getattr(self.ner, "infer", None)
+                        if infer is None:
+                            self.logger.warning("NER processor provided but has no callable interface: %s", type(self.ner))
+                            continue
+                        ents = infer(turn, labels)
+
+                    # ents is expected to be a dict (NERProcessor) or list (GLiNERInfer)
+                    if isinstance(ents, dict):
+                        for lst in ents.values():
+                            pois.update(lst)
+                    elif isinstance(ents, list):
+                        # GLiNERInfer returns list[dict] with keys 'type' and 'entity'
+                        for ent in ents:
+                            etype = ent.get("type") or ent.get("entity_type") or ent.get("label")
+                            val = ent.get("entity") or ent.get("text") or ent.get("value")
+                            if etype in labels and val:
+                                pois.add(val)
+                    else:
+                        self.logger.debug("NER returned unsupported type %s; skipping", type(ents))
+                except Exception as e:
+                    self.logger.exception("NER extraction failed for turn: %s", e)
         # also you could embed & cluster, or extract keywords…
 
         # 2) Query each memory type for those POIs

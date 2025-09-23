@@ -11,12 +11,41 @@ mcp:
     port: 8000
     server_url: "http://localhost:8000/mcp"
     tool_name: get_weather
+  time:
+    module: "time_service"
+    port: 8001
+    server_url: "http://localhost:8001/mcp"
+    tool_name: get_time
+  calc:
+    module: "calc_service"
+    port: 8002
+    server_url: "http://localhost:8002/mcp"
+    tool_name: calc
+  translate:
+    module: "translate_service"
+    port: 8003
+    server_url: "http://localhost:8003/mcp"
+    tool_name: translate
+  notes:
+    module: "notes_service"
+    port: 8004
+    server_url: "http://localhost:8004/mcp"
+    tool_name: add_note
+  news:
+    module: "news_service"
+    port: 8005
+    server_url: "http://localhost:8005/mcp"
+    tool_name: get_headlines
 
 models:
   WhisperMediumInfer:
     model_name: "openai/whisper-medium"
     samplerate: 16000
     device: "cpu"
+  TitaNetEmbeddingInfer:
+    model_name: "nvidia/speakerverification_en_titanet_large"
+    sample_rate: 16000
+    sample_duration: 1.0
   OpenAIWhisperTinyInfer:
     model_name: "openai/whisper-tiny"
     samplerate: 16000
@@ -31,11 +60,9 @@ models:
     device: "mps"
   SpeakerEmbeddingInfer:
     model_name: "speechbrain/spkrec-ecapa-voxceleb"
-  SpeechT5TTSInfer:
-    model_name: "microsoft/speecht5_tts"
-    vocoder_name: "microsoft/speecht5_hifigan"
-    samplerate: 16000
-    device: "cpu"
+  ECAPAEmbeddingInfer:
+    model_name: "speechbrain/spkrec-ecapa-voxceleb"
+    sample_rate: 16000
 
 memory:
   dir: "{project_root}/.memory/"

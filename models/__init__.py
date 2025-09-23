@@ -9,4 +9,5 @@ from models.ModelManager import ModelManager
 from models.SpeechBrainInfer import SpeechBrainInfer
 from models.WhisperMediumInfer import WhisperMediumInfer
 from models.SpeechT5TTSInfer import SpeechT5TTSInfer
+from models.ECAPAEmbeddingInfer import ECAPAEmbeddingInfer
 

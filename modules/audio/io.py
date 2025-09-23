@@ -50,6 +50,23 @@ class AudioRecorder:
 
         return audio
 
+    def listen(self,
+               frame_duration_ms: int = 30,
+               padding_duration_ms: int = 300,
+               vad_mode: int = 1):
+        """
+        Continuously listen and yield utterances detected by VAD.
+
+        This generator starts capturing audio immediately and uses voice
+        activity detection (VAD) to find speech boundaries.  Each time the
+        user speaks and then stops, the concatenated audio is yielded as a
+        float32 array.  It then resumes listening for the next utterance.
+        """
+        while True:
+            yield self.record_until_speech_end(frame_duration_ms,
+                                               padding_duration_ms,
+                                               vad_mode)
+
     def record_until_speech_end(self, frame_duration_ms=30, padding_duration_ms=300, vad_mode=1):
         """
         Record audio until the user stops speaking, using WebRTC VAD.

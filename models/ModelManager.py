@@ -10,6 +10,8 @@ class ModelManager(BaseComponent):
     with settings["models"][<ClassName>] as kwargs.
     """
     _initialized = False
+    # registry: attribute_name -> instance (keeps track of loaded models)
+    _registry: dict = {}
 
     def __init__(self):
         super().__init__()
@@ -32,6 +34,8 @@ class ModelManager(BaseComponent):
                     raise ImportError(f"Error importing model class '{class_name}': {e}") from e
                 cfg = settings["models"].get(class_name, {})
                 instance = cls(**cfg)
-            # attach to the class so you can do ModelManager.<ClassName>
+            # attach to the class so you can do ModelManager.<attr_name>
             setattr(ModelManager, attr_name, instance)
+            # also track in the registry for other modules that check it
+            ModelManager._registry[attr_name] = instance
             instantiated[class_name] = instance

@@ -60,12 +60,20 @@ class AudioRecogniserManager(BaseComponent):
         """
         if speaker_id is None:
             speaker_id = uuid.uuid4().hex
+        # compute per-wav embeddings
         embs = [self.embedder.embed(w) for w in wavs]
         proto = np.mean(np.stack(embs, axis=0), axis=0)
-        proto = proto.astype(np.float32) / np.linalg.norm(proto)
+        # ensure float32 dtype and stable normalisation
+        proto = proto.astype(np.float32)
+        norm = np.linalg.norm(proto).astype(np.float32)
+        if norm == 0.0:
+            # avoid division by zero; keep as-is
+            normalized = proto
+        else:
+            normalized = proto / (norm + 1e-12)
 
-        # add to FAISS and in-memory structures
-        self.faiss.add(proto.reshape(1, -1), [speaker_id])
+        # add to FAISS and in-memory structures (pass speaker_id as a string)
+        self.faiss.add(normalized.reshape(1, -1), speaker_id)
         self.db[speaker_id] = proto
         self.metadata[speaker_id] = name
         # persist full database

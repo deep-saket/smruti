@@ -155,51 +155,39 @@ class AgentSmruti(BaseComponent):
 
     def run(self):
         """Main interaction loop."""
-        print("🤖 AgentSmruti ready (say 'exit' to quit)")
-        i = 0
-        while True:
-            audio = self.record_audio()
+        print("AgentSmruti ready (say 'exit' to quit)")
+        for turn, audio in enumerate(self.recorder.listen()):
+            # Transcribe and log
             user_text = self.transcribe(audio)
             print(f"You said: {user_text}")
-
-            if i == 0:
-                if self.audio_recogniser is not None:
-                    sid, name, score = self.audio_recogniser.verify(audio.astype(np.float32) / np.iinfo(np.int16).max)
-                    if sid == self.saket_id:
-                        self.play(["Hello Mr. Saket!! Welcome back."])
-
-            fetched_memory = self.memory_fetcher(self.immediate_memory.get(), self.saket_id)
-
-
-            # Get available tools
-            necessary_tools = self.tools_decider.decide_tools(user_text)
-            mcp_results = self.mcp_processor(necessary_tools, user_text)
-
-            # store user turn
-            self.add_to_memory("Saket", user_text)
+            # Speaker verification on first turn
+            if turn == 0 and self.audio_recogniser is not None:
+                sid, name, score = self.audio_recogniser.verify(
+                    audio.astype(np.float32) / np.iinfo(np.int16).max
+                )
+                if sid == self.saket_id:
+                    self.play(["Hello Mr. Saket!! Welcome back."])
+            # Handle special commands
             if not self.check_special_commands(user_text):
-                print("👋 Goodbye!")
+                print("Goodbye!")
                 break
-
-            # build prompt and get assistant reply
-            prompt = self.build_prompt(new_message=user_text,
-                                       memory_snippets="",
-                                       memory_writes="",
-                                       mcp_results=mcp_results)
-            print("💬 Generating response...")
+            # Memory fetch and tool selection
+            fetched_memory = self.memory_fetcher(
+                self.immediate_memory.get(), self.saket_id
+            )
+            tools = self.tools_decider.decide_tools(user_text)
+            # Build prompt, generate response and speak
+            prompt = self.build_prompt(
+                new_message=user_text,
+                memory_snippets="",
+                memory_writes="",
+                mcp_results=self.mcp_processor(tools, user_text),
+            )
             response = self.generate_response(prompt)
-
-            parsed_response = self.parse_response(response)
-
-            # store assistant turn
-            self.add_to_memory("Smruti", parsed_response)
-            print(f"Assistant: {parsed_response}")
-
-            # speak out
-            print("🔊 Speaking response...")
-            
-            self.play(parsed_response)
-            i += 1
+            sentences = self.parse_response(response)
+            self.add_to_memory("Saket", user_text)
+            self.add_to_memory("Smruti", " ".join(sentences))
+            self.play(" ".join(sentences))
 
 if __name__ == "__main__":
     ags = AgentSmruti()

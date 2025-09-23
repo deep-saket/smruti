@@ -1,0 +1,45 @@
+# Core scientific stack
+numpy>=1.24.0
+scipy
+pandas
+matplotlib
+
+# Audio processing
+librosa
+soundfile
+pyaudio
+webrtcvad
+
+# Deep learning
+torch>=2.1.0
+torchaudio>=2.1.0
+transformers>=4.40.0
+accelerate
+sentencepiece
+
+# Model backends (choose at least one)
+# If running on macOS (no CUDA):
+pyannote.audio>=3.1.0
+
+# If you later move to Linux w/ CUDA, uncomment this line:
+# nemo_toolkit[asr]
+
+# Speaker verification and vector DB
+faiss-cpu
+# faiss-gpu   # use this instead if you have CUDA + GPU drivers
+
+# NLP / NER
+gliner
+
+# Web / API
+requests
+pyyaml
+dirtyjson
+
+# CLI / utilities
+tqdm
+colorlog
+
+# Optional: UI helpers
+streamlit
+gradio

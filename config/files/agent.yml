@@ -7,7 +7,7 @@ models:
   vlm: "QwenV25Infer"
   ner: "GLiNERInfer"
   embedder: "SentenceEmbedderInfer"
-  speaker_embedder: SpeakerEmbeddingInfer
+  speaker_embedder: "ECAPAEmbeddingInfer"
 
 details:
   name: "Smruti"
