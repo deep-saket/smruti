@@ -18,6 +18,7 @@ class AudioRecogniserManager(BaseComponent):
         db_path: str = "audio_embeddings.npz",
     ):
         self.embedder = embedding_component
+        self.embedding_dim = embedding_dim
         self.faiss = FAISSIndexManager(dim=embedding_dim)
         self.db_path = db_path
         # in-memory maps
@@ -44,13 +45,38 @@ class AudioRecogniserManager(BaseComponent):
         """Persist current db to a .npz file (labels, names, embeddings)."""
         labels = list(self.db.keys())
         names = [self.metadata[sid] for sid in labels]
-        embs = np.stack([self.db[sid] for sid in labels], axis=0)
+        if labels:
+            embs = np.stack([self.db[sid] for sid in labels], axis=0)
+            embs = embs.astype(np.float32)
+        else:
+            # empty embeddings array with known embedding_dim
+            embs = np.empty((0, int(self.embedding_dim)), dtype=np.float32)
+
         np.savez(
             self.db_path,
-            embeddings=embs.astype(np.float32),
+            embeddings=embs,
             labels=np.array(labels, dtype=object),
             names=np.array(names, dtype=object)
         )
+
+    def recreate_database(self, remove_file: bool = True):
+        """Delete any existing DB file and recreate an empty FAISS index and metadata.
+
+        Args:
+            remove_file: if True, remove the persisted .npz file from disk.
+        """
+        # reset in-memory structures
+        self.faiss.reset()
+        self.db.clear()
+        self.metadata.clear()
+        # optionally remove file
+        try:
+            if remove_file and os.path.exists(self.db_path):
+                os.remove(self.db_path)
+        except Exception:
+            self.logger.exception("Failed to remove existing audio DB file")
+        # persist an empty DB
+        self._save_database()
 
     def enroll(self, name: str, wavs: list[np.ndarray], speaker_id: str = None) -> str:
         """

@@ -9,17 +9,11 @@ class ModelManager(BaseComponent):
     Each model is imported from the `models` package and instantiated
     with settings["models"][<ClassName>] as kwargs.
     """
-    _initialized = False
-    # registry: attribute_name -> instance (keeps track of loaded models)
-    _registry: dict = {}
 
-    def __init__(self):
-        super().__init__()
-        if not ModelManager._initialized:
-            self._load_models()
-            ModelManager._initialized = True
+    _registry = {}
 
-    def _load_models(self):
+    @classmethod
+    def load_models(cls):
         models_pkg = importlib.import_module("models")
         instantiated = {}
         for attr_name, class_name in agent["models"].items():
@@ -27,15 +21,17 @@ class ModelManager(BaseComponent):
                 instance = instantiated[class_name]
             else:
                 try:
-                    cls = getattr(models_pkg, class_name)
+                    klass = getattr(models_pkg, class_name)
                 except AttributeError as e:
                     raise ImportError(f"Model class '{class_name}' not found in 'models' package : {e}")
                 except Exception as e:
                     raise ImportError(f"Error importing model class '{class_name}': {e}") from e
                 cfg = settings["models"].get(class_name, {})
-                instance = cls(**cfg)
+                instance = klass(**cfg)
             # attach to the class so you can do ModelManager.<attr_name>
-            setattr(ModelManager, attr_name, instance)
+            setattr(cls, attr_name, instance)
             # also track in the registry for other modules that check it
-            ModelManager._registry[attr_name] = instance
             instantiated[class_name] = instance
+            cls._registry[attr_name] = instance
+
+        return cls

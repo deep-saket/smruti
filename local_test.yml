@@ -1,0 +1,23 @@
+# local_test.yml - runtime options for local_test.py
+# Set `live: true` to attempt loading real models (requires setup.sh and dependencies).
+# Set `smoke: true` to run the smoke checks after instantiating the agent.
+#
+# Agent run parameters (used by local_test.py when it instantiates AgentSmruti):
+#  - use_voice: whether AgentSmruti should initialize audio recorder/player
+#  - hello_world: whether local_test should call agent.hello_world(...) after instantiation
+#  - text_only: if true, agent.hello_world will use text-only mode (no mic)
+#  - text_inputs: list of text strings to feed the agent in text-only mode
+
+live: true
+smoke: false
+
+# Agent init options
+use_voice: true
+hello_world: true
+
+# hello_world agent run options
+text_only: false
+text_inputs:
+  - "Hello, what's your name?"
+  - "What's the weather in Paris today?"
+  - "Calculate 12 * 8 for me"

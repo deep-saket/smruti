@@ -2,6 +2,7 @@ from common import CallableComponent
 
 class MemoryFetcher(CallableComponent):
     def __init__(self, memory_manager, ner_processor, n_context=5):
+        super().__init__()
         self.mem = memory_manager
         self.ner = ner_processor
         self.n_context = n_context

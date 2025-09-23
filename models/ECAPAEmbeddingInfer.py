@@ -79,3 +79,4 @@ class ECAPAEmbeddingInfer(InferenceEmbeddingComponent):
         emb_tensor = emb_tensor.squeeze(0)
         emb_tensor = l2_normalize(emb_tensor, p=2, dim=-1)
         return emb_tensor.cpu().numpy().astype(np.float32)
+
